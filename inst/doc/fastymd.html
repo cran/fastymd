@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<meta name="generator" content="litedown 0.6.2">
+<title>fastymd</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xiee/utils@1.13.67/css/default.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xiee/utils@1.13.67/css/callout.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xiee/utils@1.13.67/css/article.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xiee/utils@1.13.67/css/prism-xcode.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@xiee/utils@1.13.67/js/sidenotes.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@xiee/utils@1.13.67/js/copy-button.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@xiee/utils@1.13.67/js/callout.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@xiee/utils@1.13.67/js/toc-highlight.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js" defer></script>
+</head>
+<body>
+<div class="frontmatter">
+<div class="title"><h1>fastymd</h1></div>
+</div>
+<div class="body">
+<div id="TOC">
+<ul>
+<li><a href="#sec:overview">Overview</a></li>
+<li><a href="#sec:benchmarks">Benchmarks</a></li>
+</ul>
+</div>
+<h2 id="sec:overview">Overview</h2>
+<p>fastymd is a package for working with Year-Month-Day (YMD) style date objects.
+It provides extremely fast passing of character strings and numeric values to
+date objects as well as fast decomposition of these in to their year, month
+and day components. The underlying algorithms follow the
+<a href="https://howardhinnant.github.io/date_algorithms">approach of Howard Hinnant</a>
+for calculating days from the <a href="https://en.wikipedia.org/wiki/Unix_time">UNIX Epoch</a>
+of <a href="https://en.wikipedia.org/wiki/Gregorian_calendar">Gregorian Calendar</a> dates
+and vice versa.</p>
+<p>The API won’t give any surprises:</p>
+<pre><code class="language-r">library(fastymd)
+cdate &lt;- c(&quot;2025-04-16&quot;, &quot;2025-04-17&quot;)
+(res &lt;- fymd(cdate))
+</code></pre>
+<pre><code>#&gt; [1] &quot;2025-04-16&quot; &quot;2025-04-17&quot;
+</code></pre>
+<pre><code class="language-r">res == as.Date(cdate)
+</code></pre>
+<pre><code>#&gt; [1] TRUE TRUE
+</code></pre>
+<pre><code class="language-r">get_ymd(res)
+</code></pre>
+<pre><code>#&gt;   year month day
+#&gt; 1 2025     4  16
+#&gt; 2 2025     4  17
+</code></pre>
+<pre><code class="language-r">fymd(2025, 4, 16) == res[1L]
+</code></pre>
+<pre><code>#&gt; [1] TRUE
+</code></pre>
+<p>Invalid dates will return <code>NA</code> and a warning:</p>
+<pre><code class="language-r">fymd(2021, 02, 29) # not a leap year
+</code></pre>
+<pre><code class="language-plain warning">#&gt; NAs introduced due to invalid month and/or day combinations.
+</code></pre>
+<pre><code>#&gt; [1] NA
+</code></pre>
+<p>More interesting is the handling of output after a valid date. Consider the
+following timestamp:</p>
+<pre><code class="language-r">timelt &lt;- as.POSIXlt(Sys.time(), tz = &quot;UTC&quot;)
+(timestamp &lt;- strftime(timelt , &quot;%Y-%m-%dT%H:%M:%S%z&quot;))
+</code></pre>
+<pre><code>#&gt; [1] &quot;2025-04-24T21:51:27+0000&quot;
+</code></pre>
+<p>By default the time element is ignored:</p>
+<pre><code class="language-r">(res &lt;- fymd(timestamp))
+</code></pre>
+<pre><code>#&gt; [1] &quot;2025-04-24&quot;
+</code></pre>
+<pre><code class="language-r">res == as.Date(timestamp, tz = &quot;UTC&quot;)
+</code></pre>
+<pre><code>#&gt; [1] TRUE
+</code></pre>
+<p>This ignoring of the timestamp is both good and bad. For timestamps it makes
+perfect sense, but perhaps you have simple dates and a concern that some are
+corrupted. For these we can use the <code>strict</code> argument:</p>
+<pre><code class="language-r">cdate &lt;- &quot;2025-04-16nonsense &quot;
+fymd(cdate)
+</code></pre>
+<pre><code>#&gt; [1] &quot;2025-04-16&quot;
+</code></pre>
+<pre><code class="language-r">fymd(cdate, strict = TRUE)
+</code></pre>
+<pre><code class="language-plain warning">#&gt; NAs introduced due to invalid date strings.
+</code></pre>
+<pre><code>#&gt; [1] NA
+</code></pre>
+<h2 id="sec:benchmarks">Benchmarks</h2>
+<div class="callout-important" data-legend="Comparison with fasttime::fastDate()">
+<p>The character method  of <code>fymd()</code> parses input strings in a fixed, year, month
+and day order. These values must be digits but can be separated by any non-digit
+character. This is similar in spirit to the <code>fastDate()</code> function in Simon
+Urbanek’s <a href="https://CRAN.R-project.org/package=fasttime">fasttime</a> package, using
+pure text parsing and no system calls for maximum speed.</p>
+<p>For extremely fast passing of POSIX style timestamps you will struggle to beat
+the performance of <a href="https://CRAN.R-project.org/package=fasttime">fasttime</a>. This
+works fantastically for timestamps that do not need validation and are within
+the date range supported by the package (currently 1970-01-01 through to the
+year 2199).</p>
+<p><code>fymd()</code> fills the, admittedly small, niche where you want fast parsing of YMD
+strings along with date validation and support for a wider range of dates from
+the <a href="https://en.wikipedia.org/wiki/Proleptic_Gregorian_calendar">Proleptic Gregorian calendar</a>
+(currently we support years in the range <code>[-9999, 9999]</code>). This additional
+capability does come with a small performance penalty but, hopefully, this has
+been kept to a minimum and the implementation remains competitive.</p>
+</div>
+<pre><code class="language-r">library(microbenchmark)
+
+# 1970-01-01 (UNIX epoch) to &quot;2199-01-01&quot;
+dates &lt;- seq.Date(from = .Date(0), to = fymd(&quot;2199-01-01&quot;), by = &quot;day&quot;)
+
+# comparison timings for fymd (character method) 
+cdates  &lt;- format(dates)
+(res_c &lt;- microbenchmark(
+    fasttime  = fasttime::fastDate(cdates),
+    fastymd   = fymd(cdates),
+    ymd       = ymd::ymd(cdates),
+    lubridate = lubridate::ymd(cdates),
+    check     = &quot;equal&quot;
+))
+</code></pre>
+<pre><code>#&gt; Unit: microseconds
+#&gt;       expr      min        lq     mean    median       uq       max neval
+#&gt;   fasttime  530.626  535.6445  590.102  540.0530  546.215  3573.341   100
+#&gt;    fastymd  759.244  769.6580  797.582  777.3625  784.922  2186.300   100
+#&gt;        ymd 4420.079 4514.3255 4617.550 4535.2805 4614.213  5878.654   100
+#&gt;  lubridate 5016.447 5180.8155 6189.872 5331.4980 6651.158 36841.468   100
+</code></pre>
+<pre><code class="language-r"># comparison timings for fymd (numeric method)
+ymd  &lt;- get_ymd(dates)
+(res_n &lt;- microbenchmark(
+    fastymd   = fymd(ymd[[1]], ymd[[2]], ymd[[3]]),
+    lubridate = lubridate::make_date(ymd[[1]], ymd[[2]], ymd[[3]]),
+    check     = &quot;equal&quot;
+))
+</code></pre>
+<pre><code>#&gt; Unit: microseconds
+#&gt;       expr     min       lq     mean   median       uq      max neval
+#&gt;    fastymd 343.595 345.2425 367.1786 348.3880  370.139  462.517   100
+#&gt;  lubridate 537.478 542.0665 769.6049 547.9725 1061.470 3038.528   100
+</code></pre>
+<pre><code class="language-r"># comparison timings for year getter
+(res_get_year &lt;- microbenchmark(
+    fastymd   = get_year(dates),
+    ymd       = ymd::year(dates),
+    lubridate = lubridate::year(dates),
+    check     = &quot;equal&quot;
+))
+</code></pre>
+<pre><code>#&gt; Unit: microseconds
+#&gt;       expr      min       lq      mean    median        uq       max neval
+#&gt;    fastymd  482.164  496.652  574.9981  503.0590  507.7575  1960.116   100
+#&gt;        ymd  499.396  506.810  573.2474  511.8395  517.6060  3277.326   100
+#&gt;  lubridate 7609.029 7619.865 8252.9036 7625.8210 7706.4820 39390.940   100
+</code></pre>
+<pre><code class="language-r"># comparison timings for month getter
+(res_get_month &lt;- microbenchmark(
+    fastymd   = get_month(dates),
+    ymd       = ymd::month(dates),
+    lubridate = lubridate::month(dates),
+    check     = &quot;equal&quot;
+))
+</code></pre>
+<pre><code>#&gt; Unit: microseconds
+#&gt;       expr      min        lq     mean    median        uq       max neval
+#&gt;    fastymd  449.323  464.4660  506.680  469.0645  472.5910  2012.544   100
+#&gt;        ymd  532.418  537.7585  550.637  540.5080  544.4505   786.986   100
+#&gt;  lubridate 8219.113 8271.7070 8832.283 8300.4755 9651.9500 11677.499   100
+</code></pre>
+<pre><code class="language-r"># comparison timings for mday getter
+(res_get_mday &lt;- microbenchmark(
+    fastymd   = get_mday(dates),
+    ymd       = ymd::mday(dates),
+    lubridate = lubridate::day(dates),
+    check     = &quot;equal&quot;
+))
+</code></pre>
+<pre><code>#&gt; Unit: microseconds
+#&gt;       expr      min        lq     mean    median       uq      max neval
+#&gt;    fastymd  450.595  462.7430  570.538  467.9580  473.047 2562.345   100
+#&gt;        ymd  537.688  542.0065  568.018  543.6995  546.725 1931.322   100
+#&gt;  lubridate 7552.984 7571.8345 7757.858 7582.7800 7631.016 9653.524   100
+</code></pre>
+</div>
+</body>
+</html>

@@ -1,0 +1,150 @@
+---
+title: "fastymd"
+output:
+    html:
+        meta:
+            css: ["@default@1.13.67", "@callout@1.13.67", "@article@1.13.67"]
+            js: ["@sidenotes@1.13.67", "@copy-button@1.13.67", "@callout@1.13.67", "@toc-highlight@1.13.67"]
+        options:
+            toc: true
+            js_highlight:
+                package: prism
+                version: 1.29.0
+        
+vignette: >
+  %\VignetteEngine{litedown::vignette}
+  %\VignetteIndexEntry{fastymd}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteDepends{microbenchmark, fasttime, lubridate, ymd}
+---
+
+```{r, include = FALSE}
+litedown::reactor(print = NA)
+```
+
+## Overview
+
+fastymd is a package for working with Year-Month-Day (YMD) style date objects.
+It provides extremely fast passing of character strings and numeric values to
+date objects as well as fast decomposition of these in to their year, month
+and day components. The underlying algorithms follow the
+[approach of Howard Hinnant](https://howardhinnant.github.io/date_algorithms)
+for calculating days from the [UNIX Epoch](https://en.wikipedia.org/wiki/Unix_time)
+of [Gregorian Calendar](https://en.wikipedia.org/wiki/Gregorian_calendar) dates
+and vice versa.
+
+The API won't give any surprises:
+
+```{r}
+library(fastymd)
+cdate <- c("2025-04-16", "2025-04-17")
+(res <- fymd(cdate))
+res == as.Date(cdate)
+get_ymd(res)
+fymd(2025, 4, 16) == res[1L]
+```
+
+Invalid dates will return `NA` and a warning:
+
+```{r}
+fymd(2021, 02, 29) # not a leap year
+```
+
+More interesting is the handling of output after a valid date. Consider the
+following timestamp:
+
+```{r}
+timelt <- as.POSIXlt(Sys.time(), tz = "UTC")
+(timestamp <- strftime(timelt , "%Y-%m-%dT%H:%M:%S%z"))
+```
+
+By default the time element is ignored:
+
+```{r}
+(res <- fymd(timestamp))
+res == as.Date(timestamp, tz = "UTC")
+```
+
+This ignoring of the timestamp is both good and bad. For timestamps it makes
+perfect sense, but perhaps you have simple dates and a concern that some are
+corrupted. For these we can use the `strict` argument:
+
+```{r}
+cdate <- "2025-04-16nonsense "
+fymd(cdate)
+fymd(cdate, strict = TRUE)
+```
+
+## Benchmarks
+
+::: {.callout-important data-legend="Comparison with fasttime::fastDate()"}
+
+The character method  of `fymd()` parses input strings in a fixed, year, month
+and day order. These values must be digits but can be separated by any non-digit
+character. This is similar in spirit to the `fastDate()` function in Simon
+Urbanek's [fasttime](https://CRAN.R-project.org/package=fasttime) package, using
+pure text parsing and no system calls for maximum speed.
+
+For extremely fast passing of POSIX style timestamps you will struggle to beat
+the performance of [fasttime](https://CRAN.R-project.org/package=fasttime). This
+works fantastically for timestamps that do not need validation and are within
+the date range supported by the package (currently 1970-01-01 through to the
+year 2199).
+
+`fymd()` fills the, admittedly small, niche where you want fast parsing of YMD
+strings along with date validation and support for a wider range of dates from
+the [Proleptic Gregorian calendar](https://en.wikipedia.org/wiki/Proleptic_Gregorian_calendar)
+(currently we support years in the range `[-9999, 9999]`). This additional
+capability does come with a small performance penalty but, hopefully, this has
+been kept to a minimum and the implementation remains competitive.
+
+:::
+
+```{r}
+library(microbenchmark)
+
+# 1970-01-01 (UNIX epoch) to "2199-01-01"
+dates <- seq.Date(from = .Date(0), to = fymd("2199-01-01"), by = "day")
+
+# comparison timings for fymd (character method) 
+cdates  <- format(dates)
+(res_c <- microbenchmark(
+    fasttime  = fasttime::fastDate(cdates),
+    fastymd   = fymd(cdates),
+    ymd       = ymd::ymd(cdates),
+    lubridate = lubridate::ymd(cdates),
+    check     = "equal"
+))
+
+# comparison timings for fymd (numeric method)
+ymd  <- get_ymd(dates)
+(res_n <- microbenchmark(
+    fastymd   = fymd(ymd[[1]], ymd[[2]], ymd[[3]]),
+    lubridate = lubridate::make_date(ymd[[1]], ymd[[2]], ymd[[3]]),
+    check     = "equal"
+))
+
+# comparison timings for year getter
+(res_get_year <- microbenchmark(
+    fastymd   = get_year(dates),
+    ymd       = ymd::year(dates),
+    lubridate = lubridate::year(dates),
+    check     = "equal"
+))
+
+# comparison timings for month getter
+(res_get_month <- microbenchmark(
+    fastymd   = get_month(dates),
+    ymd       = ymd::month(dates),
+    lubridate = lubridate::month(dates),
+    check     = "equal"
+))
+
+# comparison timings for mday getter
+(res_get_mday <- microbenchmark(
+    fastymd   = get_mday(dates),
+    ymd       = ymd::mday(dates),
+    lubridate = lubridate::day(dates),
+    check     = "equal"
+))
+```
