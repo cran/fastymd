@@ -4,7 +4,7 @@
 \name{fastymd-package}
 \alias{fastymd}
 \alias{fastymd-package}
-\title{fastymd: Fast Utilities for 'Year Month Day' Objects}
+\title{fastymd: Fast Utilities for Year Month Day Objects}
 \description{
 A collection of utility functions for working with Year Month Day objects. Includes functions for fast parsing of numeric and character input based on algorithms described in Hinnant, H. (2021) \url{https://howardhinnant.github.io/date_algorithms.html} as well as a branchless calculation of leap years by Jerichaux (2025) \url{https://stackoverflow.com/a/79564914}.
 }

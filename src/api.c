@@ -1,6 +1,5 @@
 #include "civil_from_days.h"
 #include "days_from_civil.h"
-#include "leapyear.h"
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -16,6 +15,13 @@
 /* https://git.musl-libc.org/cgit/musl/tree/src/ctype/isspace.c */
 #define ISDIGIT(c) ((unsigned)(c)-'0' < 10)
 #define ISSPACE(c) ((c) == ' ' || (unsigned)(c)-'\t' < 5)
+
+/*
+ * From stackoverflow: https://stackoverflow.com/a/79564914
+ * user: https://stackoverflow.com/users/17321211/jerichaux
+ * License: CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/)
+ */
+#define ISLEAP(yearNum) (!(((yearNum) & 3) | ((yearNum) & (((16 - (!((yearNum) % 25))) | 16) ^ 16))))
 
 #define MAX_YEAR 9999
 
@@ -189,10 +195,9 @@ SEXP is_leap_year(SEXP y)
 		for (R_xlen_t i = 0; i < XLENGTH(y); i ++)
 			yy[i] = floor(yy[i]);
 		y = PROTECT(Rf_coerceVector(y, INTSXP)); protected ++;
-	}
-
-	if (TYPEOF(y) != INTSXP)
+	} else if (TYPEOF(y) != INTSXP) {
 		Rf_error("Input `x` must be a numeric object.");
+	}
 
 	/* How many inputs */
 	R_xlen_t n = XLENGTH(y);
@@ -205,7 +210,7 @@ SEXP is_leap_year(SEXP y)
 	const int* py = INTEGER_RO(y);
 	for (R_xlen_t i = 0; i < n; i++) {
 		int value = py[i];
-		pout[i] = value == NA_INTEGER ? NA_INTEGER : isLeapYear_uniModBranchless(value);
+		pout[i] = value == NA_INTEGER ? NA_INTEGER : ISLEAP(value);
 	}
 	UNPROTECT(protected);
 	return out;
@@ -378,7 +383,7 @@ SEXP get_mday(SEXP x)
 static int days_in_month(int year, unsigned int month)
 {
 	const int     days[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
-	return month == 2 && isLeapYear_uniModBranchless(year) ? 29 : days[month - 1];
+	return month == 2 && ISLEAP(year) ? 29 : days[month - 1];
 }
 
 static bool valid_ymd(int year, int month, int day, bool *warn)
