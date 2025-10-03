@@ -18,7 +18,8 @@
 #' implementation in that we use pure text parsing and no system calls.
 #' `fymd()` differs from [`fastDate()`][fasttime::fastDate()] in that it
 #' validates all dates for correctness and supports a a much larger range of
-#' dates (i.e. the [Proleptic Gregorian calendar](https://en.wikipedia.org/wiki/Proleptic_Gregorian_calendar).
+#' dates (i.e. the
+#' [Proleptic Gregorian calendar](https://en.wikipedia.org/wiki/Proleptic_Gregorian_calendar).
 #' This additional capability does come with a small performance cost but, IMO,
 #' remains competetive.
 #'
@@ -93,18 +94,18 @@
 # -------------------------------------------------------------------------
 #' @export
 fymd <- function(...) {
-	# dispatch on the first dot if present
-	if(...length()) UseMethod("fymd", ..1) else .Date(integer())
+    # dispatch on the first dot if present
+    if (...length()) UseMethod("fymd", ..1) else .Date(integer())
 }
 
 # -------------------------------------------------------------------------
 #' @rdname fymd
 #' @export
 fymd.default <- function(...) {
-	stop(sprintf(
-		"Not implemented for objects of class <%s>.",
-		toString(class(..1))
-	))
+    stop(sprintf(
+        "Not implemented for objects of class <%s>.",
+        toString(class(..1))
+    ))
 }
 
 # -------------------------------------------------------------------------
@@ -112,52 +113,50 @@ fymd.default <- function(...) {
 #' @export
 fymd.numeric <- function(y, m = 1, d = 1, ...) {
 
-	# Coerce to integer
-	y <- as.integer(y)
-	m <- as.integer(m)
-	d <- as.integer(d)
+    # Coerce to integer
+    y <- as.integer(y)
+    m <- as.integer(m)
+    d <- as.integer(d)
 
-	# Ensure that inputs are the same length or length 1
-	dat     <- list(y, m, d)
-	lengths <- lengths(dat)
-	unique  <- unique(lengths)
-	l       <- length(unique)
+    # Ensure that inputs are the same length or length 1
+    dat     <- list(y, m, d)
+    lengths <- lengths(dat)
+    unique  <- unique(lengths)
+    l       <- length(unique)
 
-	# We can return early if all length 0
-	if (l == 1L && unique[1L] == 0L)
-		return(.Date(integer()))
+    # We can return early if all length 0
+    if (l == 1L && unique[1L] == 0L)
+        return(.Date(integer()))
 
-	# handle different lengths
-	if (!l == 1L) {
+    # handle different lengths
+    if (l != 1L) {
 
-		# Cannot recycle length 0 vectors
-		if (any(unique == 0L))
-			stop("Unable to recycle vectors of length 0.")
+        # Cannot recycle length 0 vectors
+        if (any(unique == 0L))
+            stop("Unable to recycle vectors of length 0.")
 
-		# Cannot recycle 3 different lengths
-		if (l == 3L)
-			stop("`year`, `month` and `day` values must have the same length (or be of length 1).")
+        # Cannot recycle 3 different lengths
+        if (l == 3L)
+            stop("`year`, `month` and `day` values must have the same length (or be of length 1).")
 
-		# l must be 2 in which case one of these values must be 1 to recycle
-		if (!any(unique == 1L))
-			stop("`year`, `month` and `day` values must have the same length (or be of length 1).")
+        # l must be 2 in which case one of these values must be 1 to recycle
+        if (!any(unique == 1L))
+            stop("`year`, `month` and `day` values must have the same length (or be of length 1).")
 
-		# recycle
-		dat <- lapply(dat, rep_len, max(unique))
-	}
+        # recycle
+        n <- max(unique)
+        y <- rep_len(y, n)
+        m <- rep_len(m, n)
+        d <- rep_len(d, n)
+    }
 
-	# pull out the recycled values
-	y <- dat[[1L]]
-	m <- dat[[2L]]
-	d <- dat[[3L]]
-
-	# Call the C
-	.Call(C_ymd, y, m, d)
+    # Call the C
+    .Call(C_ymd, y, m, d)
 }
 
 # -------------------------------------------------------------------------
 #' @rdname fymd
 #' @export
 fymd.character <- function(x, strict = FALSE, ...) {
-	if (length(x)) .Call(C_ymd_character, x, strict) else .Date(integer())
+    if (length(x)) .Call(C_ymd_character, x, strict) else .Date(integer())
 }

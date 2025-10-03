@@ -24,21 +24,21 @@
 # -------------------------------------------------------------------------
 #' @export
 is_leap_year <- function(x) {
-	UseMethod("is_leap_year")
+    UseMethod("is_leap_year")
 }
 
 #' @export
 is_leap_year.numeric <- function(x) {
-	if (!length(x))
-		return(logical())
-	.Call(C_is_leap_year, x)
+    if (!length(x))
+        return(logical())
+    .Call(C_is_leap_year, x)
 }
 
 #' @export
 is_leap_year.Date <- function(x) {
-	if (!length(x))
-		return(logical())
-	is_leap_year.numeric(get_year(x))
+    if (!length(x))
+        return(logical())
+    is_leap_year.numeric(get_year(x))
 }
 
 # -------------------------------------------------------------------------

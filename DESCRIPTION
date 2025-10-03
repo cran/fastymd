@@ -1,6 +1,6 @@
 Package: fastymd
 Title: Fast Utilities for Year Month Day Objects
-Version: 0.1.3
+Version: 0.1.4
 Authors@R: 
     c(
         person(
@@ -34,14 +34,14 @@ Encoding: UTF-8
 Suggests: fasttime, lubridate, microbenchmark, tinytest, ymd, litedown
 Depends: R (>= 4.2.0)
 VignetteBuilder: litedown
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 Config/testthat/load-all: list(export_all = FALSE, helpers = FALSE)
 NeedsCompilation: yes
-Packaged: 2025-05-12 19:11:11 UTC; tim
+Packaged: 2025-10-03 08:50:22 UTC; tim
 Author: Tim Taylor [aut, cre] (ORCID: <https://orcid.org/0000-0002-8587-7113>),
   Howard Hinnant [aut] (Author of underlying algorithms for calculating
     Epoch days to Calendar days and vice versa),
   jerichaux [aut] (Author of included branchless leap year calculation)
 Maintainer: Tim Taylor <tim.taylor@hiddenelephants.co.uk>
 Repository: CRAN
-Date/Publication: 2025-05-12 19:50:02 UTC
+Date/Publication: 2025-10-03 09:10:02 UTC

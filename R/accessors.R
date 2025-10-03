@@ -43,78 +43,78 @@ NULL
 #' @rdname accessors
 #' @export
 get_ymd <- function(x, ...) {
-	UseMethod("get_ymd")
+    UseMethod("get_ymd")
 }
 
 # -------------------------------------------------------------------------
 #' @export
 get_ymd.default <- function(x, ...) {
-	stop(sprintf("Not implemented for objects of class <%s>.",toString(class(x))))
+    stop(sprintf("Not implemented for objects of class <%s>.", toString(class(x))))
 }
 
 # -------------------------------------------------------------------------
 #' @export
 get_ymd.Date <- function(x, ...) {
-	if (length(x)) {
-		list2DF(.Call(C_get_ymd, x))
-	} else {
-		list2DF(list(year = integer(), month = integer(), day = integer()))
-	}
+    if (length(x)) {
+        list2DF(.Call(C_get_ymd, x))
+    } else {
+        list2DF(list(year = integer(), month = integer(), day = integer()))
+    }
 }
 
 # -------------------------------------------------------------------------
 #' @rdname accessors
 #' @export
 get_year <- function(x, ...) {
-	UseMethod("get_year")
+    UseMethod("get_year")
 }
 
 # -------------------------------------------------------------------------
 #' @export
 get_year.default <- function(x, ...) {
-	stop(sprintf("Not implemented for objects of class <%s>.", toString(class(x))))
+    stop(sprintf("Not implemented for objects of class <%s>.", toString(class(x))))
 }
 
 # -------------------------------------------------------------------------
 #' @export
 get_year.Date <- function(x, ...) {
-	if (length(x)) .Call(C_get_year, x) else integer()
+    if (length(x)) .Call(C_get_year, x) else integer()
 }
 
 # -------------------------------------------------------------------------
 #' @rdname accessors
 #' @export
 get_month <- function(x, ...) {
-	UseMethod("get_month")
+    UseMethod("get_month")
 }
 
 # -------------------------------------------------------------------------
 #' @export
 get_month.default <- function(x, ...) {
-	stop(sprintf("Not implemented for objects of class <%s>.", toString(class(x))))
+    stop(sprintf("Not implemented for objects of class <%s>.", toString(class(x))))
 }
 
 # -------------------------------------------------------------------------
 #' @export
 get_month.Date <- function(x, ...) {
-	if (length(x)) .Call(C_get_month, x) else integer()
+    if (length(x)) .Call(C_get_month, x) else integer()
 }
 
 # -------------------------------------------------------------------------
 #' @rdname accessors
 #' @export
 get_mday <- function(x, ...) {
-	UseMethod("get_mday")
+    UseMethod("get_mday")
 }
 
 # -------------------------------------------------------------------------
 #' @export
 get_mday.default <- function(x, ...) {
-	stop(sprintf("Not implemented for objects of class <%s>.", toString(class(x))))
+    stop(sprintf("Not implemented for objects of class <%s>.", toString(class(x))))
 }
 
 # -------------------------------------------------------------------------
 #' @export
 get_mday.Date <- function(x, ...) {
-	if (length(x)) .Call(C_get_mday, x) else integer()
+    if (length(x)) .Call(C_get_mday, x) else integer()
 }

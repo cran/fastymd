@@ -10,7 +10,7 @@ fymd(2025, 4, 16) == res[1L]
 fymd(2021, 02, 29) # not a leap year
 
 timelt <- as.POSIXlt(Sys.time(), tz = "UTC")
-(timestamp <- strftime(timelt , "%Y-%m-%dT%H:%M:%S%z"))
+(timestamp <- strftime(timelt, "%Y-%m-%dT%H:%M:%S%z"))
 
 (res <- fymd(timestamp))
 res == as.Date(timestamp, tz = "UTC")
@@ -24,7 +24,7 @@ library(microbenchmark)
 # 1970-01-01 (UNIX epoch) to "2199-01-01"
 dates <- seq.Date(from = .Date(0), to = fymd("2199-01-01"), by = "day")
 
-# comparison timings for fymd (character method) 
+# comparison timings for fymd (character method)
 cdates  <- format(dates)
 (res_c <- microbenchmark(
     fasttime  = fasttime::fastDate(cdates),

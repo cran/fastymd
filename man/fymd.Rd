@@ -60,7 +60,8 @@ It is similar in spirit to that of Simon Urbanek's \link[fasttime:fastPOSIXct]{f
 implementation in that we use pure text parsing and no system calls.
 \code{fymd()} differs from \code{\link[fasttime:fastPOSIXct]{fastDate()}} in that it
 validates all dates for correctness and supports a a much larger range of
-dates (i.e. the \href{https://en.wikipedia.org/wiki/Proleptic_Gregorian_calendar}{Proleptic Gregorian calendar}.
+dates (i.e. the
+\href{https://en.wikipedia.org/wiki/Proleptic_Gregorian_calendar}{Proleptic Gregorian calendar}.
 This additional capability does come with a small performance cost but, IMO,
 remains competetive.
 

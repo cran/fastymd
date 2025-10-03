@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-<meta name="generator" content="litedown 0.6.2">
+<meta name="generator" content="litedown 0.7">
 <title>fastymd</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xiee/utils@1.13.67/css/default.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xiee/utils@1.13.67/css/callout.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xiee/utils@1.13.67/css/article.min.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xiee/utils@1.13.67/css/prism-xcode.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xiee/utils@1.14.14/css/prism-xcode.min.css">
 <script src="https://cdn.jsdelivr.net/npm/@xiee/utils@1.13.67/js/sidenotes.min.js" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/@xiee/utils@1.13.67/js/copy-button.min.js" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/@xiee/utils@1.13.67/js/callout.min.js" defer></script>
@@ -67,14 +67,14 @@ cdate &lt;- c(&quot;2025-04-16&quot;, &quot;2025-04-17&quot;)
 <p>More interesting is the handling of output after a valid date. Consider the
 following timestamp:</p>
 <pre><code class="language-r">timelt &lt;- as.POSIXlt(Sys.time(), tz = &quot;UTC&quot;)
-(timestamp &lt;- strftime(timelt , &quot;%Y-%m-%dT%H:%M:%S%z&quot;))
+(timestamp &lt;- strftime(timelt, &quot;%Y-%m-%dT%H:%M:%S%z&quot;))
 </code></pre>
-<pre><code>#&gt; [1] &quot;2025-05-12T19:11:06+0000&quot;
+<pre><code>#&gt; [1] &quot;2025-10-03T08:50:17+0000&quot;
 </code></pre>
 <p>By default the time element is ignored:</p>
 <pre><code class="language-r">(res &lt;- fymd(timestamp))
 </code></pre>
-<pre><code>#&gt; [1] &quot;2025-05-12&quot;
+<pre><code>#&gt; [1] &quot;2025-10-03&quot;
 </code></pre>
 <pre><code class="language-r">res == as.Date(timestamp, tz = &quot;UTC&quot;)
 </code></pre>
@@ -118,7 +118,7 @@ been kept to a minimum and the implementation remains competitive.</p>
 # 1970-01-01 (UNIX epoch) to &quot;2199-01-01&quot;
 dates &lt;- seq.Date(from = .Date(0), to = fymd(&quot;2199-01-01&quot;), by = &quot;day&quot;)
 
-# comparison timings for fymd (character method) 
+# comparison timings for fymd (character method)
 cdates  &lt;- format(dates)
 (res_c &lt;- microbenchmark(
     fasttime  = fasttime::fastDate(cdates),
@@ -129,11 +129,11 @@ cdates  &lt;- format(dates)
 ))
 </code></pre>
 <pre><code>#&gt; Unit: microseconds
-#&gt;       expr      min       lq      mean   median       uq       max neval
-#&gt;   fasttime  528.702  533.631  560.6187  536.527  540.419  1939.710   100
-#&gt;    fastymd  775.045  780.199  794.6313  784.697  788.530  1130.412   100
-#&gt;        ymd 4444.390 4487.957 4607.3698 4507.409 4555.168  5968.801   100
-#&gt;  lubridate 4956.522 5065.686 6075.4734 5176.645 6562.420 37051.120   100
+#&gt;       expr      min       lq      mean    median        uq      max neval
+#&gt;   fasttime  533.670  538.575  577.8399  540.6035  544.7715 2105.967   100
+#&gt;    fastymd  817.212  822.011  891.7562  824.8310  828.7085 5767.230   100
+#&gt;        ymd 4236.551 4281.931 4395.9070 4313.1145 4336.5280 5953.068   100
+#&gt;  lubridate 5486.083 5599.050 6219.0921 5668.7810 7022.4130 8608.015   100
 </code></pre>
 <pre><code class="language-r"># comparison timings for fymd (numeric method)
 ymd  &lt;- get_ymd(dates)
@@ -144,9 +144,9 @@ ymd  &lt;- get_ymd(dates)
 ))
 </code></pre>
 <pre><code>#&gt; Unit: microseconds
-#&gt;       expr     min      lq     mean  median      uq      max neval
-#&gt;    fastymd 373.440 375.765 425.1393 378.861 381.897 2289.366   100
-#&gt;  lubridate 534.272 542.949 660.0808 547.262 552.196 2261.223   100
+#&gt;       expr     min       lq     mean  median       uq      max neval
+#&gt;    fastymd 325.480 326.7925 356.3634 328.165 332.5630 1956.998   100
+#&gt;  lubridate 676.659 720.7870 839.9302 723.551 726.2465 2585.256   100
 </code></pre>
 <pre><code class="language-r"># comparison timings for year getter
 (res_get_year &lt;- microbenchmark(
@@ -157,10 +157,10 @@ ymd  &lt;- get_ymd(dates)
 ))
 </code></pre>
 <pre><code>#&gt; Unit: microseconds
-#&gt;       expr      min        lq      mean    median        uq      max neval
-#&gt;    fastymd  483.708  497.4185  567.4244  501.1405  506.2355 2148.081   100
-#&gt;        ymd  498.245  505.6640  521.0937  510.2580  514.2100  775.766   100
-#&gt;  lubridate 7593.239 7605.0920 7891.8327 7618.5575 7650.4620 9812.684   100
+#&gt;       expr      min        lq      mean    median       uq       max neval
+#&gt;    fastymd  358.942  359.8645  399.9320  360.9220  364.338  3179.119   100
+#&gt;        ymd  381.245  394.3240  545.4191  403.5015  478.542  3748.817   100
+#&gt;  lubridate 7564.449 7583.4395 8110.1502 7602.2950 8880.130 10426.904   100
 </code></pre>
 <pre><code class="language-r"># comparison timings for month getter
 (res_get_month &lt;- microbenchmark(
@@ -171,10 +171,10 @@ ymd  &lt;- get_ymd(dates)
 ))
 </code></pre>
 <pre><code>#&gt; Unit: microseconds
-#&gt;       expr      min       lq      mean    median        uq       max neval
-#&gt;    fastymd  449.674  465.243  569.8989  468.5995  473.1580  2142.421   100
-#&gt;        ymd  532.589  536.547  550.2292  539.6225  543.1995   805.552   100
-#&gt;  lubridate 8202.122 8243.695 8996.7768 8268.0460 9351.0135 40174.112   100
+#&gt;       expr      min        lq      mean    median        uq       max neval
+#&gt;    fastymd  325.219  326.5470  328.9860  327.5240  330.8250   352.291   100
+#&gt;        ymd  417.141  425.0265  436.5834  433.5175  442.9205   712.876   100
+#&gt;  lubridate 8234.756 8273.7135 9062.5125 8289.4180 9659.8770 38708.926   100
 </code></pre>
 <pre><code class="language-r"># comparison timings for mday getter
 (res_get_mday &lt;- microbenchmark(
@@ -185,10 +185,10 @@ ymd  &lt;- get_ymd(dates)
 ))
 </code></pre>
 <pre><code>#&gt; Unit: microseconds
-#&gt;       expr      min       lq      mean   median       uq      max neval
-#&gt;    fastymd  451.738  462.253  522.9238  465.584  469.496 1871.983   100
-#&gt;        ymd  535.996  539.823  558.3011  541.927  545.193 1798.335   100
-#&gt;  lubridate 7530.001 7550.941 7771.7465 7564.346 7592.257 9609.052   100
+#&gt;       expr      min        lq      mean    median        uq       max neval
+#&gt;    fastymd  361.417  362.0785  378.6033  364.0725  366.4865  1695.318   100
+#&gt;        ymd  421.540  426.5440  434.1789  429.9460  433.9390   790.311   100
+#&gt;  lubridate 7541.686 7561.8090 7842.8506 7578.0845 7617.9145 10427.656   100
 </code></pre>
 </div>
 </body>
