@@ -1,3 +1,7 @@
+# fastymd 0.1.5
+
+- Small tweaks to vignette's css and js.
+
 # fastymd 0.1.4
 
 - Small improvement to the performance of `fymd()` for numeric inputs.
