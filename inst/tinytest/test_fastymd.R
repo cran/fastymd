@@ -19,6 +19,8 @@ lt     <- as.POSIXlt(dates)
 years  <- lt$year + 1900
 months <- lt$mon + 1
 days   <- lt$mday
+ydays  <- lt$yday + 1
+wdays  <- lt$wday
 chars  <- format(dates)
 
 # check the numeric version of fymd
@@ -30,10 +32,21 @@ res2   <- fymd(chars)
 expect_identical(res1, res2)
 
 # Now check the accessors
-
 expect_equal(get_year(dates), years)
 expect_equal(get_month(dates), months)
 expect_equal(get_mday(dates), days)
+expect_equal(get_yday(dates), ydays)
+#expect_equal(get_wday(dates), (wdays - 1) %% 7 + 1)
+expect_equal(get_wday(dates), wdays)
+expect_equal(get_ymd(dates), data.frame(year = years, month = months, day = days))
+
+expect_equal(get_year(dates[0]), integer())
+expect_equal(get_month(dates[0]), integer())
+expect_equal(get_mday(dates[0]), integer())
+expect_equal(get_yday(dates[0]), integer())
+expect_equal(get_wday(dates[0]), integer())
+expect_equal(get_ymd(dates[0]), data.frame(year = integer(0), month = integer(0), day = integer(0)))
+
 
 # -------------------------------------------------------------------------
 # -------------------------------------------------------------------------
@@ -159,3 +172,54 @@ expect_identical(is_leap_year(x), .is_leap_year(x))
 
 # alias works
 expect_identical(is_leap_year(x), is_leap(x))
+
+
+# -------------------------------------------------------------------------
+# -------------------------------------------------------------------------
+# yearweek checks (From grates which were in turn adapted from aweek)
+# -------------------------------------------------------------------------
+# -------------------------------------------------------------------------
+yrs <- 2001:2019
+dates <- sprintf("%d-01-01", yrs)
+dates <- as.Date(c(dates, NA_character_))
+
+# ISOWEEKS
+
+expected_year <- c(
+	2001L, 2002L, 2003L, 2004L, 2004L,
+	2005L, 2007L, 2008L, 2009L, 2009L,
+	2010L, 2011L, 2013L, 2014L, 2015L,
+	2015L, 2016L, 2018L, 2019L, NA_integer_
+)
+
+expected_week <- c(
+	01L, 01L, 01L, 01L, 53L,
+	52L, 01L, 01L, 01L, 53L,
+	52L, 52L, 01L, 01L, 01L,
+	53L, 52L, 01L, 01L, NA_integer_
+)
+
+expect_identical(get_isoyear(dates), expected_year)
+expect_identical(get_isoweek(dates), expected_week)
+expect_identical(get_yearweekday(dates, 1)$year, expected_year)
+expect_identical(get_yearweekday(dates, 1)$week, expected_week)
+expect_identical(get_yearweekday_year(dates, 1), expected_year)
+expect_identical(get_yearweekday_week(dates, 1), expected_week)
+
+
+# EPIWEEKS
+
+expected_year <- c(
+	2001L, 2002L, 2003L, 2003L, 2004L,
+	2006L, 2007L, 2008L, 2008L, 2009L,
+	2010L, 2012L, 2013L, 2014L, 2014L,
+	2015L, 2017L, 2018L, 2019L, NA_integer_)
+
+expected_week <- c(
+	1L, 1L, 1L, 53L, 52L,
+	1L, 1L, 1L, 53L, 52L,
+	52L, 1L, 1L, 1L, 53L,
+	52L, 1L, 1L, 1L, NA_integer_
+)
+
+

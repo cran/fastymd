@@ -56,9 +56,9 @@ the approach described in Hinnant (2021) for calculating days from the
 
 The character version parses inputs in a fixed, year, month and day order.
 These values must be digits but can be separated by any non-digit character.
-It is similar in spirit to that of Simon Urbanek's \link[fasttime:fastPOSIXct]{fastDate()}
+It is similar in spirit to that of Simon Urbanek's \link[fasttime:fastDate]{fastDate()}
 implementation in that we use pure text parsing and no system calls.
-\code{fymd()} differs from \code{\link[fasttime:fastPOSIXct]{fastDate()}} in that it
+\code{fymd()} differs from \code{\link[fasttime:fastDate]{fastDate()}} in that it
 validates all dates for correctness and supports a a much larger range of
 dates (i.e. the
 \href{https://en.wikipedia.org/wiki/Proleptic_Gregorian_calendar}{Proleptic Gregorian calendar}.

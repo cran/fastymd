@@ -43,6 +43,7 @@
  -------------------------------------------------------------------------- */
 
 #include "civil_from_days.h"
+#include "leapyear.h"
 
 void civil_from_days(int z, int *year, int *month, int *day)
 {
@@ -99,4 +100,20 @@ int day_from_days(int z)
 	const unsigned d = doy - (153 * mp + 2) / 5 + 1;                             // [1, 31]
 
 	return d;
+}
+
+int day_of_year(int z)
+{
+	const int DAYS_BEFORE_MONTH[12] = {0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334};
+
+	int y, m, d;
+	civil_from_days(z, &y, &m, &d);
+
+	return DAYS_BEFORE_MONTH[m - 1] + d + (ISLEAP(y) && m > 2);
+}
+
+int day_of_week(int z)
+{
+	int res = z >= -4 ? (z+4) % 7 : (z+5) % 7 + 6;
+	return res;
 }

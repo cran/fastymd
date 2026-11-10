@@ -21,6 +21,7 @@ Useful links:
 
 Authors:
 \itemize{
+  \item Tim Taylor \email{tim.taylor@hiddenelephants.co.uk} (\href{https://orcid.org/0000-0002-8587-7113}{ORCID})
   \item Howard Hinnant (Author of underlying algorithms for calculating Epoch days to Calendar days and vice versa)
   \item jerichaux (Author of included branchless leap year calculation)
 }

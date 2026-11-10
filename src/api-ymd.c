@@ -1,9 +1,9 @@
 #include "civil_from_days.h"
 #include "days_from_civil.h"
+#include "leapyear.h"
+#include "utils.h"
 
-#include <stdint.h>
 #include <stdbool.h>
-#include <ctype.h>
 
 #define R_NO_REMAP
 #include <R.h>
@@ -16,18 +16,18 @@
 #define ISDIGIT(c) ((unsigned)(c)-'0' < 10)
 #define ISSPACE(c) ((c) == ' ' || (unsigned)(c)-'\t' < 5)
 
-/*
- * From stackoverflow: https://stackoverflow.com/a/79564914
- * user: https://stackoverflow.com/users/17321211/jerichaux
- * License: CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/)
- */
-#define ISLEAP(yearNum) (!(((yearNum) & 3) | ((yearNum) & (((16 - (!((yearNum) % 25))) | 16) ^ 16))))
-
 #define MAX_YEAR 9999
 
+/* ----------------------------------------------------------------------
+ * Prototypes
+ * ---------------------------------------------------------------------- */
 static int days_in_month(int year, unsigned int month);
 static bool valid_ymd(int year, int month, int day, bool *warn);
 
+
+/* ----------------------------------------------------------------------
+ * R INTERFACE - Date from <year, month, day> input
+ * ---------------------------------------------------------------------- */
 SEXP ymd(SEXP y, SEXP m, SEXP d)
 {
 	R_xlen_t size = XLENGTH(y);
@@ -65,6 +65,9 @@ SEXP ymd(SEXP y, SEXP m, SEXP d)
 	return out;
 }
 
+/* ----------------------------------------------------------------------
+ * R INTERFACE - Date from "year-month-day" character input
+ * ---------------------------------------------------------------------- */
 SEXP ymd_character(SEXP y, SEXP strict)
 {
 	if ((!IS_SCALAR(strict, LGLSXP)) || LOGICAL_RO(strict)[0] == NA_LOGICAL)
@@ -183,39 +186,9 @@ SEXP ymd_character(SEXP y, SEXP strict)
 	return out;
 }
 
-
-SEXP is_leap_year(SEXP y)
-{
-	int protected = 0;
-
-	/* support doubles coercible to integer */
-	if (TYPEOF(y) == REALSXP) {
-		y = PROTECT(Rf_duplicate(y)); protected ++;
-		double* yy = REAL(y);
-		for (R_xlen_t i = 0; i < XLENGTH(y); i ++)
-			yy[i] = floor(yy[i]);
-		y = PROTECT(Rf_coerceVector(y, INTSXP)); protected ++;
-	} else if (TYPEOF(y) != INTSXP) {
-		Rf_error("Input `x` must be a numeric object.");
-	}
-
-	/* How many inputs */
-	R_xlen_t n = XLENGTH(y);
-
-	/* vector for results */
-	SEXP out = PROTECT(Rf_allocVector(LGLSXP, n)); protected++;
-	int* pout = INTEGER(out);
-
-	/* loop over input */
-	const int* py = INTEGER_RO(y);
-	for (R_xlen_t i = 0; i < n; i++) {
-		int value = py[i];
-		pout[i] = value == NA_INTEGER ? NA_INTEGER : ISLEAP(value);
-	}
-	UNPROTECT(protected);
-	return out;
-}
-
+/* ----------------------------------------------------------------------
+ * R INTERFACE - List of <year, month, day> from Date input
+ * ---------------------------------------------------------------------- */
 SEXP get_ymd(SEXP x)
 {
 	if (!Rf_inherits(x, "Date"))
@@ -268,118 +241,49 @@ SEXP get_ymd(SEXP x)
 	return out;
 }
 
+/* ----------------------------------------------------------------------
+ * R INTERFACE - Get the year from a date
+ * ---------------------------------------------------------------------- */
 SEXP get_year(SEXP x)
 {
-	if (!Rf_inherits(x, "Date"))
-		Rf_error("Input `x` must be a <Date> object.");
-
-	int protected = 0;
-
-	/* How many inputs */
-	R_xlen_t n = XLENGTH(x);
-
-	/* if double we want to floor the input before coercing to integer */
-	if (Rf_isReal(x)) {
-		x = PROTECT(Rf_duplicate(x)); protected ++;
-		double* xx = REAL(x);
-		for (R_xlen_t i = 0; i < n; i ++)
-			xx[i] = floor(xx[i]);
-		x = PROTECT(Rf_coerceVector(x, INTSXP)); protected ++;
-	}
-
-	/* from now on x is an integer */
-	const int* px = INTEGER_RO(x);
-
-	/* vectors to hold year output */
-	SEXP year = PROTECT(Rf_allocVector(INTSXP, n)); protected ++;
-	int* py = INTEGER(year);
-
-
-	/* loop over input and calculate year */
-	for (R_xlen_t i = 0; i < n; i ++) {
-		int value = px[i];
-		py[i] = value == NA_INTEGER ? NA_INTEGER : year_from_days(value);
-	}
-
-	UNPROTECT(protected);
-
-	return year;
+	return date_in_int_out(x, &year_from_days);
 }
 
+/* ----------------------------------------------------------------------
+ * R INTERFACE - Get the month from a date
+ * ---------------------------------------------------------------------- */
 SEXP get_month(SEXP x)
 {
-	if (!Rf_inherits(x, "Date"))
-		Rf_error("Input `x` must be a <Date> object.");
-
-	int protected = 0;
-
-	/* How many inputs */
-	R_xlen_t n = XLENGTH(x);
-
-	/* if double we want to floor the input before coercing to integer */
-	if (Rf_isReal(x)) {
-		x = PROTECT(Rf_duplicate(x)); protected ++;
-		double* xx = REAL(x);
-		for (R_xlen_t i = 0; i < n; i ++)
-			xx[i] = floor(xx[i]);
-		x = PROTECT(Rf_coerceVector(x, INTSXP)); protected ++;
-	}
-
-	/* from now on x is an integer */
-	const int* px = INTEGER_RO(x);
-
-	/* vectors to hold month output */
-	SEXP month = PROTECT(Rf_allocVector(INTSXP, n)); protected ++;
-	int* pm = INTEGER(month);
-
-	/* loop over input and calculate month */
-	for (R_xlen_t i = 0; i < n; i ++) {
-		int value = px[i];
-		pm[i] = value == NA_INTEGER ? NA_INTEGER : month_from_days(value);
-	}
-
-	UNPROTECT(protected);
-
-	return month;
+	return date_in_int_out(x, &month_from_days);
 }
 
+/* ----------------------------------------------------------------------
+ * R INTERFACE - Get the day of the month from a date
+ * ---------------------------------------------------------------------- */
 SEXP get_mday(SEXP x)
 {
-	if (!Rf_inherits(x, "Date"))
-		Rf_error("Input `x` must be a <Date> object.");
-
-	int protected = 0;
-
-	/* How many inputs */
-	R_xlen_t n = XLENGTH(x);
-
-	/* if double we want to floor the input before coercing to integer */
-	if (Rf_isReal(x)) {
-		x = PROTECT(Rf_duplicate(x)); protected ++;
-		double* xx = REAL(x);
-		for (R_xlen_t i = 0; i < n; i ++)
-			xx[i] = floor(xx[i]);
-		x = PROTECT(Rf_coerceVector(x, INTSXP)); protected ++;
-	}
-
-	/* from now on x is an integer */
-	const int* px = INTEGER_RO(x);
-
-	/* vectors to hold day output */
-	SEXP day = PROTECT(Rf_allocVector(INTSXP, n)); protected ++;
-	int* pd = INTEGER(day);
-
-	/* loop over input and calculate month */
-	for (R_xlen_t i = 0; i < n; i ++) {
-		int value = px[i];
-		pd[i] = value == NA_INTEGER ? NA_INTEGER : day_from_days(value);
-	}
-
-	UNPROTECT(protected);
-
-	return day;
+	return date_in_int_out(x, &day_from_days);
 }
 
+/* ----------------------------------------------------------------------
+ * R INTERFACE - Get the day of the year from a date
+ * ---------------------------------------------------------------------- */
+SEXP get_yday(SEXP x)
+{
+	return date_in_int_out(x, &day_of_year);
+}
+
+/* ----------------------------------------------------------------------
+ * R INTERFACE - Get the weekday: 0 (Sunday) to 6 (Saturday)
+ * ---------------------------------------------------------------------- */
+SEXP get_wday(SEXP x)
+{
+	return date_in_int_out(x, &day_of_week);
+}
+
+/* ----------------------------------------------------------------------
+ * INTERNALS
+ * ---------------------------------------------------------------------- */
 static int days_in_month(int year, unsigned int month)
 {
 	const int     days[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
@@ -396,14 +300,10 @@ static bool valid_ymd(int year, int month, int day, bool *warn)
 		return false;
 	}
 
-
 	if (day < 1 || day > days_in_month(year, month)) {
 		*warn = true;
 		return false;
 	}
 
-
 	return true;
 }
-
-

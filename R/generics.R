@@ -1,5 +1,5 @@
 # -------------------------------------------------------------------------
-#' Generics for accessing the year, month and month-day of an object
+#' Generics for accessing the year, month and month-day values of an object
 #'
 # -------------------------------------------------------------------------
 #' Fast methods are provided for `Date` objects. The underlying algorithm
@@ -19,13 +19,16 @@
 #' get_year(date)
 #' get_month(date)
 #' get_mday(date)
+#' get_yday(date)
 #'
 # -------------------------------------------------------------------------
 #' @return
 #'
 #' For `get_ymd()` a data frame with integer columns year, month and mday. For
 #' `get_year()`, `get_month()` and `get_mday()`, integer vectors of the
-#' requested components.
+#' requested components comparable to the aforementioned call. `get_yday()`
+#' returns the day of the year (1 to 366), whilst `get_wday()` returns the
+#' numeric day of the week.
 #'
 # -------------------------------------------------------------------------
 #' @references
@@ -35,12 +38,12 @@
 #' (Accessed 17 April 2025).
 #'
 # -------------------------------------------------------------------------
-#' @name accessors
+#' @name generics
 NULL
 
 
 # -------------------------------------------------------------------------
-#' @rdname accessors
+#' @rdname generics
 #' @export
 get_ymd <- function(x, ...) {
     UseMethod("get_ymd")
@@ -55,15 +58,11 @@ get_ymd.default <- function(x, ...) {
 # -------------------------------------------------------------------------
 #' @export
 get_ymd.Date <- function(x, ...) {
-    if (length(x)) {
-        list2DF(.Call(C_get_ymd, x))
-    } else {
-        list2DF(list(year = integer(), month = integer(), day = integer()))
-    }
+	list2DF(.Call(C_get_ymd, x))
 }
 
 # -------------------------------------------------------------------------
-#' @rdname accessors
+#' @rdname generics
 #' @export
 get_year <- function(x, ...) {
     UseMethod("get_year")
@@ -78,11 +77,11 @@ get_year.default <- function(x, ...) {
 # -------------------------------------------------------------------------
 #' @export
 get_year.Date <- function(x, ...) {
-    if (length(x)) .Call(C_get_year, x) else integer()
+    .Call(C_get_year, x)
 }
 
 # -------------------------------------------------------------------------
-#' @rdname accessors
+#' @rdname generics
 #' @export
 get_month <- function(x, ...) {
     UseMethod("get_month")
@@ -97,11 +96,11 @@ get_month.default <- function(x, ...) {
 # -------------------------------------------------------------------------
 #' @export
 get_month.Date <- function(x, ...) {
-    if (length(x)) .Call(C_get_month, x) else integer()
+    .Call(C_get_month, x)
 }
 
 # -------------------------------------------------------------------------
-#' @rdname accessors
+#' @rdname generics
 #' @export
 get_mday <- function(x, ...) {
     UseMethod("get_mday")
@@ -116,5 +115,43 @@ get_mday.default <- function(x, ...) {
 # -------------------------------------------------------------------------
 #' @export
 get_mday.Date <- function(x, ...) {
-    if (length(x)) .Call(C_get_mday, x) else integer()
+    .Call(C_get_mday, x)
+}
+
+# -------------------------------------------------------------------------
+#' @rdname generics
+#' @export
+get_yday <- function(x, ...) {
+	UseMethod("get_yday")
+}
+
+# -------------------------------------------------------------------------
+#' @export
+get_yday.default <- function(x, ...) {
+	stop(sprintf("Not implemented for objects of class <%s>.", toString(class(x))))
+}
+
+# -------------------------------------------------------------------------
+#' @export
+get_yday.Date <- function(x, ...) {
+	.Call(C_get_yday, x)
+}
+
+# -------------------------------------------------------------------------
+#' @rdname generics
+#' @export
+get_wday <- function(x, ...) {
+	UseMethod("get_wday")
+}
+
+# -------------------------------------------------------------------------
+#' @export
+get_wday.default <- function(x, ...) {
+	stop(sprintf("Not implemented for objects of class <%s>.", toString(class(x))))
+}
+
+# -------------------------------------------------------------------------
+#' @export
+get_wday.Date <- function(x, ...) {
+	.Call(C_get_wday, x)
 }
